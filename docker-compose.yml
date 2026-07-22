@@ -2,59 +2,30 @@ version: '3.8'
 
 services:
   db:
-    image: postgis/postgis:15-3.3
-    container_name: deforestation_db
+    image: postgis/postgis:14-3.4
     environment:
-      POSTGRES_USER: deforestation
-      POSTGRES_PASSWORD: deforestation
-      POSTGRES_DB: deforestation_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: deforestation
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U deforestation"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - deforestation-network
+      - db_data:/var/lib/postgresql/data
 
-  backend:
+  api:
     build:
-      context: .
-      dockerfile: backend/Dockerfile
-    container_name: deforestation_backend
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file:
+      - backend/.env.example
     environment:
-      DATABASE_URL: postgresql://deforestation:deforestation@db:5432/deforestation_db
-      API_HOST: 0.0.0.0
-      API_PORT: 8000
-      ENVIRONMENT: production
-      DEBUG: false
+      - DATABASE_URL=postgresql+psycopg2://postgres:postgres@db:5432/deforestation
     ports:
       - "8000:8000"
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     volumes:
-      - ./backend/app:/app/app
-      - backend_uploads:/app/uploads
-      - backend_models:/app/models
-      - backend_logs:/app/logs
-    networks:
-      - deforestation-network
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      - ./backend:/app
 
 volumes:
-  postgres_data:
-    driver: local
-  backend_uploads:
-    driver: local
-  backend_models:
-    driver: local
-  backend_logs:
-    driver: local
-
-networks:
-  deforestation-network:
-    driver: bridge
+  db_data:

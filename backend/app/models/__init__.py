@@ -1,15 +1,2 @@
-"""Database models."""
-
-from .deforestation import (
-    AnalysisResult,
-    Alert,
-    Prediction,
-    SatelliteImage,
-)
-
-__all__ = [
-    "SatelliteImage",
-    "AnalysisResult",
-    "Alert",
-    "Prediction",
-]
+from app.db.base import Base
+from app.models import models  # noqa: F401
